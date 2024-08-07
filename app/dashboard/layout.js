@@ -1,8 +1,6 @@
 import { redirect } from "next/navigation";
+import { createClient } from "@/libs/supabase/server";
 import config from "@/config";
-import { cookies } from "next/headers";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import Header from "@/components/Header";
 
 // This is a server-side component to ensure the user is logged in.
 // If not, it will redirect to the login page.
@@ -10,13 +8,13 @@ import Header from "@/components/Header";
 // You can also add custom static UI elements like a Navbar, Sidebar, Footer, etc..
 // See https://shipfa.st/docs/tutorials/private-page
 export default async function LayoutPrivate({ children }) {
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = createClient();
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (!user) {
     redirect(config.auth.loginUrl);
   }
 

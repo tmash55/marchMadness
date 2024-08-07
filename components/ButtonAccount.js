@@ -3,11 +3,34 @@
 
 import { useState, useEffect } from "react";
 import { Popover, Transition } from "@headlessui/react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/libs/supabase/client";
 import apiClient from "@/libs/api";
 
-const ButtonAccount = ({ user, handleSignOut }) => {
+// A button to show user some account actions
+//  1. Billing: open a Stripe Customer Portal to manage their billing (cancel subscription, update payment method, etc.).
+//     You have to manually activate the Customer Portal in your Stripe Dashboard (https://dashboard.stripe.com/test/settings/billing/portal)
+//     This is only available if the customer has a customerId (they made a purchase previously)
+//  2. Logout: sign out and go back to homepage
+// See more at https://shipfa.st/docs/components/buttonAccount
+const ButtonAccount = () => {
+  const supabase = createClient();
   const [isLoading, setIsLoading] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser();
+
+      setUser(data.user);
+    };
+
+    getUser();
+  }, [supabase]);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    window.location.href = "/";
+  };
 
   const handleBilling = async () => {
     setIsLoading(true);
