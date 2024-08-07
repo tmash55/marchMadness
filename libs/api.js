@@ -1,12 +1,13 @@
+// libs/api.js
+
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { redirect } from "next/navigation";
 import config from "@/config";
 
 // use this to interact with our own API (/app/api folder) from the front-end side
-// See https://shipfa.st/docs/tutorials/api-call
 const apiClient = axios.create({
-  baseURL: "/api",
+  baseURL: "http://localhost:3000", // Ensure this baseURL is correct
 });
 
 apiClient.interceptors.response.use(
@@ -38,7 +39,7 @@ apiClient.interceptors.response.use(
     if (error.message) {
       toast.error(error.message);
     } else {
-      toast.error("something went wrong...");
+      toast.error("Something went wrong...");
     }
     return Promise.reject(error);
   }
