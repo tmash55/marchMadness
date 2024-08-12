@@ -17,13 +17,13 @@ export async function POST(req) {
     };
     const formatInt = formatMapping[format];
 
+    // Step 1: Insert the league into `march_madness_leagues`
     const { data: leagueData, error: leagueError } = await supabase
       .from("march_madness_leagues")
       .insert([
         { league_name, num_teams, start_date, format: formatInt, commissioner },
       ])
-      .select("id")
-      .single();
+      .select();
 
     if (leagueError) {
       console.error("Supabase insert error:", leagueError);
@@ -33,9 +33,10 @@ export async function POST(req) {
       );
     }
 
-    const leagueId = leagueData.id;
+    const leagueId = leagueData[0].id;
 
-    const { data: memberData, error: memberError } = await supabase
+    // Step 2: Add the commissioner as a member of the league
+    const { error: memberError } = await supabase
       .from("league_members")
       .insert([{ league_id: leagueId, user_id: commissioner }]);
 
@@ -43,19 +44,54 @@ export async function POST(req) {
       console.error("Supabase insert error:", memberError);
       return NextResponse.json(
         {
-          message: "Error adding commissioner to league members",
+          message: "Error adding commissioner as a member",
           error: memberError.message,
         },
         { status: 500 }
       );
     }
 
+    // Step 3: Copy teams from `teams_2023` into `league_teams`
+    const { data: teams, error: teamsError } = await supabase
+      .from("teams_2023")
+      .select();
+
+    if (teamsError) {
+      console.error("Supabase select error:", teamsError);
+      return NextResponse.json(
+        { message: "Error fetching teams", error: teamsError.message },
+        { status: 500 }
+      );
+    }
+
+    const leagueTeams = teams.map((team) => ({
+      league_id: leagueId,
+      team_name: team.team_name,
+      seed: team.seed,
+      member_id: null, // Teams initially have no members assigned
+    }));
+
+    const { error: insertTeamsError } = await supabase
+      .from("league_teams")
+      .insert(leagueTeams);
+
+    if (insertTeamsError) {
+      console.error("Supabase insert error:", insertTeamsError);
+      return NextResponse.json(
+        {
+          message: "Error inserting league teams",
+          error: insertTeamsError.message,
+        },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
-      { message: "League created successfully", data: leagueData },
+      { message: "League and teams created successfully", leagueId },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error creating league:", error);
+    console.error("Error handling request:", error);
     return NextResponse.json(
       { message: "Error creating league", error: error.message },
       { status: 500 }

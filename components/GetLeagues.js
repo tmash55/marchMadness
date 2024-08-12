@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/libs/supabase/client";
+
 import apiClient from "@/libs/api";
 import Link from "next/link";
 
 const GetLeagues = () => {
   const [leagues, setLeagues] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
 
   useEffect(() => {
     const fetchLeagues = async () => {
@@ -45,6 +46,7 @@ const GetLeagues = () => {
           {leagues.map((league) => (
             <li key={league.id} className="p-4 border rounded-md">
               <h2 className="text-lg font-semibold">{league.league_name}</h2>
+              <h2>{league.id}</h2>
               <p>
                 Start Date: {new Date(league.start_date).toLocaleDateString()}
               </p>
@@ -54,6 +56,9 @@ const GetLeagues = () => {
                 {league.format === 0
                   ? "Regular Snake"
                   : "3rd Round Reversal Snake"}
+              </p>
+              <p>
+                Members: {league.members_count}/{league.num_teams}
               </p>
               <Link href={`/leagues/${league.id}`}>
                 <button className="text-blue-500">View League</button>

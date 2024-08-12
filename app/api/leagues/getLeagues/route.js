@@ -9,10 +9,18 @@ export async function POST(req) {
   try {
     const { userId } = await req.json();
 
-    const { data, error } = await supabase
+    // Fetch leagues where the user is a member
+    const { data: leagues, error } = await supabase
       .from("march_madness_leagues")
-      .select("*")
-      .eq("commissioner", userId);
+      .select(
+        `
+        *,
+        league_members!inner(
+          user_id
+        )
+      `
+      )
+      .eq("league_members.user_id", userId);
 
     if (error) {
       console.error("Supabase select error:", error);
@@ -22,7 +30,27 @@ export async function POST(req) {
       );
     }
 
-    return NextResponse.json({ leagues: data }, { status: 200 });
+    // Fetch the member count for each league
+    const leaguesWithMemberCount = await Promise.all(
+      leagues.map(async (league) => {
+        const { count, error: countError } = await supabase
+          .from("league_members")
+          .select("id", { count: "exact", head: true })
+          .eq("league_id", league.id);
+
+        if (countError) {
+          console.error("Supabase count error:", countError);
+          return { ...league, members_count: 0 };
+        }
+
+        return { ...league, members_count: count };
+      })
+    );
+
+    return NextResponse.json(
+      { leagues: leaguesWithMemberCount },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Error handling request:", error);
     return NextResponse.json(
