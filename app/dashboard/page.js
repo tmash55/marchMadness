@@ -31,7 +31,6 @@ export default async function Dashboard() {
                 aria-label="My Pools and Contests"
               />
               <div role="tabpanel" className="tab-content p-10">
-                Tab content 1
                 <GetLeagues />
               </div>
 
@@ -44,7 +43,6 @@ export default async function Dashboard() {
                 defaultChecked
               />
               <div role="tabpanel" className="tab-content p-10">
-                Tab content 2
                 <JoinLeague />
               </div>
             </div>

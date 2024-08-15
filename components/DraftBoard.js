@@ -145,16 +145,32 @@ const DraftBoard = () => {
     for (let round = 1; round <= totalRounds; round++) {
       const roundRow = [];
 
-      for (let slot = 1; slot <= numTeams; slot++) {
-        const team = teams.find(
-          (t) => t.draft_round === round && t.pick_number === slot
-        );
+      if (round % 2 === 1) {
+        // Odd rounds: left to right
+        for (let slot = 1; slot <= numTeams; slot++) {
+          const team = teams.find(
+            (t) => t.draft_round === round && t.pick_number === slot
+          );
 
-        roundRow.push(
-          <td key={slot} className="border p-2">
-            {team ? `${team.team_name} (Seed: ${team.seed})` : ""}
-          </td>
-        );
+          roundRow.push(
+            <td key={slot} className="border p-2">
+              {team ? `(${team.seed}) ${team.team_name} ` : ""}
+            </td>
+          );
+        }
+      } else {
+        // Even rounds: right to left
+        for (let slot = numTeams; slot >= 1; slot--) {
+          const team = teams.find(
+            (t) => t.draft_round === round && t.pick_number === slot
+          );
+
+          roundRow.push(
+            <td key={slot} className="border p-2">
+              {team ? `(${team.seed}) ${team.team_name} ` : ""}
+            </td>
+          );
+        }
       }
 
       draftBoard.push(<tr key={round}>{roundRow}</tr>);
@@ -168,30 +184,15 @@ const DraftBoard = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-4">
-        <button
-          onClick={handleStartDraft}
-          disabled={draftState === "started"}
-          className="mr-2 px-4 py-2 bg-green-500 text-white rounded"
-        >
-          Start Draft
-        </button>
-        <button
-          onClick={handlePauseDraft}
-          disabled={draftState === "paused"}
-          className="px-4 py-2 bg-red-500 text-white rounded"
-        >
-          Pause Draft
-        </button>
-      </div>
+    <div className="">
+      <div className="mb-4"></div>
       <div className="overflow-x-auto mb-8">
-        <table className="table ">
+        <table className="table bg-blue-200">
           <thead>
             <tr>
               {Array.from({ length: numTeams }, (_, i) => (
                 <th key={i}>
-                  Slot {i + 1}
+                  {i + 1}
                   <br />
                   {members[i] ? members[i].email : "Unassigned"}
                 </th>

@@ -86,8 +86,42 @@ export async function POST(req) {
       );
     }
 
+    // Step 4: Copy default scoring settings into `league_scoring_settings`
+    const defaultScoring = [
+      { round: 1, points: 1 },
+      { round: 2, points: 2 },
+      { round: 3, points: 4 },
+      { round: 4, points: 8 },
+      { round: 5, points: 16 },
+      { round: 6, points: 32 },
+    ];
+
+    const leagueScoringSettings = defaultScoring.map((setting) => ({
+      league_id: leagueId,
+      round: setting.round,
+      points: setting.points,
+    }));
+
+    const { error: insertScoringError } = await supabase
+      .from("league_scoring_settings")
+      .insert(leagueScoringSettings);
+
+    if (insertScoringError) {
+      console.error("Supabase insert error:", insertScoringError);
+      return NextResponse.json(
+        {
+          message: "Error inserting scoring settings",
+          error: insertScoringError.message,
+        },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
-      { message: "League and teams created successfully", leagueId },
+      {
+        message: "League, teams, and scoring settings created successfully",
+        leagueId,
+      },
       { status: 200 }
     );
   } catch (error) {
